@@ -258,7 +258,7 @@ static zend_module_entry operator_module_entry = {
   NULL, /* RINIT */
   NULL, /* RSHUTDOWN */
   NULL, /* MINFO */
-  "7.2.0",
+  "8.3.0",
   STANDARD_MODULE_PROPERTIES
 };
 /* }}} */
