@@ -29,7 +29,10 @@
 /run-tests.php
 /*.lo
 /*.la
-
-/tests
-/tmp-php.ini
-/*.dep
+tests/*.diff
+tests/*.out
+tests/*.php
+tests/*.exp
+tests/*.log
+tests/*.sh
+*.dep
