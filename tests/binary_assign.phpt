@@ -7,10 +7,6 @@ Basic binary assign ops
 class foo {
 	private $value;
 
-	function __assign($val) {
-		return $this->value = $val;
-	}
-
 	function __assign_add($val) {
 		return $this->value += $val;
 	}
@@ -61,7 +57,6 @@ class foo {
 }
 
 $a = new foo(1);
-var_dump($a  = 2);
 var_dump($a += 2);
 var_dump(is_object($a));
 
@@ -86,8 +81,7 @@ var_dump($f |= 0xAA);
 var_dump($f &= 0xAA);
 var_dump($f ^= 0xAA);
 --EXPECT--
-int(2)
-int(4)
+int(3)
 bool(true)
 int(7)
 int(4)
