@@ -144,9 +144,7 @@ static zend_bool operator_get_method(zend_string *method, zval *obj,
   ZVAL_STR(&(fci->function_name), method);
 
   if (!zend_is_callable_ex(&(fci->function_name), fci->object,
-                           0,
-                           // TODO What options should we enable here?
-                           /* IS_CALLABLE_CHECK_SILENT | IS_CALLABLE_STRICT, */
+                           IS_CALLABLE_SUPPRESS_DEPRECATIONS,
                            NULL, fcc, NULL)) {
     return 0;
   }
