@@ -57,10 +57,8 @@ zval *get_zval_ptr_undef(zend_uchar op_type, znode_op node, zval *free_op,
   X(PRE_DEC,             __pre_dec) \
   X(POST_DEC,            __post_dec)
 
-// TODO ZEND_ASSIGN_ADD and others have been changed for ZEND_ASSIGN_OP + ADD
-// https://github.com/php/php-src/commit/48ca5a1e176c5301fedd1bc4f661969d6f9a49eb
-
 // NOTE: Assign operators are now a pair of one of the following assignment ops with the corresponding "normal" op, which is stored in opline->extended_value
+// https://github.com/php/php-src/commit/48ca5a1e176c5301fedd1bc4f661969d6f9a49eb
 // ZEND_ASSIGN_OP: For $var += $value
 // ZEND_ASSIGN_DIM_OP: For $array[$key] += $value
 // ZEND_ASSIGN_OBJ_OP: For $obj->prop += $value
@@ -211,9 +209,6 @@ BINARY_ASSIGN_OPS(X)
     op1 = op2; op2 = tmp;
     free_op1 = free_op2; free_op2 = free_tmp;
   }
-
-  // so i think we need to pass the fact that it's an assignment to get_method
-  // then get method can return a differen thing in the case of binary assign ops
 
   if ((Z_TYPE_P(op1) != IS_OBJECT) ||
       !operator_get_method(method, op1, &fci, &fcc)) {
