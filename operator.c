@@ -6,9 +6,9 @@
 
 #define USE_OPLINE const zend_op *opline = EX(opline);
 #define GET_OP1_ZVAL_PTR_UNDEF(fetch) \
-    get_zval_ptr_undef(opline->op1_type, opline->op1, free_op1, execute_data, opline)
+  get_zval_ptr_undef(opline->op1_type, opline->op1, free_op1, execute_data, opline)
 #define GET_OP2_ZVAL_PTR_UNDEF(fetch) \
-    get_zval_ptr_undef(opline->op2_type, opline->op2, free_op2, execute_data, opline)
+  get_zval_ptr_undef(opline->op2_type, opline->op2, free_op2, execute_data, opline)
 
 #define FREE_OP1 if (free_op1) { zval_ptr_dtor_nogc(free_op1); }
 #define FREE_OP2 if (free_op2) { zval_ptr_dtor_nogc(free_op2); }
@@ -69,10 +69,10 @@ zval *get_zval_ptr_undef(zend_uchar op_type, znode_op node, zval *free_op,
 // so these methods don't actually work.
 // I'm keeping them here to keep the structure of the macros
 #define BINARY_ASSIGN_OPS(X) \
-    X(ASSIGN_OP,              __assign) \
-    X(ASSIGN_DIM_OP,          __assign_dim) \
-    X(ASSIGN_OBJ_OP,          __assign_obj) \
-    X(ASSIGN_STATIC_PROP_OP,  __assign)
+  X(ASSIGN_OP,              __assign) \
+  X(ASSIGN_DIM_OP,          __assign_dim) \
+  X(ASSIGN_OBJ_OP,          __assign_obj) \
+  X(ASSIGN_STATIC_PROP_OP,  __assign)
 
 #define COMBINED_BINARY_ASSIGN_OPS(X) \
   X(ADD,          __assign_add) \
@@ -109,28 +109,28 @@ COMBINED_BINARY_ASSIGN_OPS(X)
 
 /* {{{ operator_method_name */
 static inline zend_string* operator_method_name(const zend_op *opline) {
-    switch (opline->opcode) {
+  switch (opline->opcode) {
 #define X(op, meth) case ZEND_##op: return s_##meth;
-    UNARY_OPS(X)
-    BINARY_OPS(X)
-    UNARY_ASSIGN_OPS(X)
+UNARY_OPS(X)
+BINARY_OPS(X)
+UNARY_ASSIGN_OPS(X)
 #undef X
 
 #define Y(op, meth) case ZEND_##op: return s_##meth;
 #define X(op, meth) case ZEND_##op: switch (opline->extended_value) {\
-        COMBINED_BINARY_ASSIGN_OPS(Y) \
-        default: \
-            ZEND_ASSERT(0); \
-            return NULL; \
-    }
+    COMBINED_BINARY_ASSIGN_OPS(Y) \
+    default: \
+      ZEND_ASSERT(0); \
+      return NULL; \
+  }
 
-    BINARY_ASSIGN_OPS(X)
+BINARY_ASSIGN_OPS(X)
 #undef X
 #undef Y
     default:
 		ZEND_ASSERT(0);
 		return NULL;
-    }
+  }
 }
 /* }}} */
 
