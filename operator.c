@@ -6,21 +6,21 @@
 
 #define USE_OPLINE const zend_op *opline = EX(opline);
 #define GET_OP1_ZVAL_PTR_UNDEF(fetch) \
-  get_zval_ptr_undef(opline->op1_type, opline->op1, &free_op1, execute_data)
+    get_zval_ptr_undef(opline->op1_type, opline->op1, free_op1, execute_data, opline)
 #define GET_OP2_ZVAL_PTR_UNDEF(fetch) \
-  get_zval_ptr_undef(opline->op2_type, opline->op2, &free_op2, execute_data)
+    get_zval_ptr_undef(opline->op2_type, opline->op2, free_op2, execute_data, opline)
 
 #define FREE_OP1 if (free_op1) { zval_ptr_dtor_nogc(free_op1); }
 #define FREE_OP2 if (free_op2) { zval_ptr_dtor_nogc(free_op2); }
 
 static
-zval *get_zval_ptr_undef(zend_uchar op_type, znode_op op, zend_free_op *free_op,
-                         zend_execute_data *execute_data) {
+zval *get_zval_ptr_undef(zend_uchar op_type, znode_op node, zval *free_op,
+                         zend_execute_data *execute_data, const zend_op* opline) {
   switch (op_type) {
     case IS_TMP_VAR:
-    case IS_VAR:      return (*free_op = EX_VAR(op.var));
-    case IS_CONST:    return EX_CONSTANT(op);
-    case IS_CV:       return EX_VAR(op.var);
+    case IS_VAR:      return (free_op = EX_VAR(node.var));
+    case IS_CONST:    return RT_CONSTANT(opline, node);
+    case IS_CV:       return EX_VAR(node.var);
     default:          return NULL;
   }
 }
@@ -57,20 +57,23 @@ zval *get_zval_ptr_undef(zend_uchar op_type, znode_op op, zend_free_op *free_op,
   X(PRE_DEC,             __pre_dec) \
   X(POST_DEC,            __post_dec)
 
+// TODO ZEND_ASSIGN_ADD and others have been changed for ZEND_ASSIGN_OP + ADD
+// https://github.com/php/php-src/commit/48ca5a1e176c5301fedd1bc4f661969d6f9a49eb
+
 #define BINARY_ASSIGN_OPS(X) \
-  X(ASSIGN,              __assign) \
-  X(ASSIGN_ADD,          __assign_add) \
-  X(ASSIGN_SUB,          __assign_sub) \
-  X(ASSIGN_MUL,          __assign_mul) \
-  X(ASSIGN_DIV,          __assign_div) \
-  X(ASSIGN_MOD,          __assign_mod) \
-  X(ASSIGN_POW,          __assign_pow) \
-  X(ASSIGN_SL,           __assign_sl) \
-  X(ASSIGN_SR,           __assign_sr) \
-  X(ASSIGN_CONCAT,       __assign_concat) \
-  X(ASSIGN_BW_OR,        __assign_bw_or) \
-  X(ASSIGN_BW_AND,       __assign_bw_and) \
-  X(ASSIGN_BW_XOR,       __assign_bw_xor)
+  X(ASSIGN,              __assign)
+  /* X(ASSIGN_ADD,          __assign_add) \ */
+  /* X(ASSIGN_SUB,          __assign_sub) \ */
+  /* X(ASSIGN_MUL,          __assign_mul) \ */
+  /* X(ASSIGN_DIV,          __assign_div) \ */
+  /* X(ASSIGN_MOD,          __assign_mod) \ */
+  /* X(ASSIGN_POW,          __assign_pow) \ */
+  /* X(ASSIGN_SL,           __assign_sl) \ */
+  /* X(ASSIGN_SR,           __assign_sr) \ */
+  /* X(ASSIGN_CONCAT,       __assign_concat) \ */
+  /* X(ASSIGN_BW_OR,        __assign_bw_or) \ */
+  /* X(ASSIGN_BW_AND,       __assign_bw_and) \ */
+  /* X(ASSIGN_BW_XOR,       __assign_bw_xor) */
 
 #define ALL_OPS(X) \
   UNARY_OPS(X) \
@@ -113,7 +116,9 @@ static zend_bool operator_get_method(zend_string *method, zval *obj,
   ZVAL_STR(&(fci->function_name), method);
 
   if (!zend_is_callable_ex(&(fci->function_name), fci->object,
-                           IS_CALLABLE_CHECK_SILENT | IS_CALLABLE_STRICT,
+                           0,
+                           // TODO What options should we enable here?
+                           /* IS_CALLABLE_CHECK_SILENT | IS_CALLABLE_STRICT, */
                            NULL, fcc, NULL)) {
     return 0;
   }
@@ -147,7 +152,7 @@ GREATER_OPS(X)
 /* {{{ op_handler */
 static int op_handler(zend_execute_data *execute_data) {
   USE_OPLINE
-  zend_free_op free_op1 = NULL, free_op2 = NULL;
+  zval *free_op1, *free_op2 = NULL;
   zval *op1, *op2 = NULL;
   zend_fcall_info fci;
   zend_fcall_info_cache fcc;
@@ -172,7 +177,7 @@ BINARY_ASSIGN_OPS(X)
 
   if (operator_is_greater_op(opline, &method)) {
     zval *tmp = op1;
-    zend_free_op free_tmp = free_op1;
+    zval *free_tmp = free_op1;
     op1 = op2; op2 = tmp;
     free_op1 = free_op2; free_op2 = free_tmp;
   }
@@ -187,7 +192,7 @@ BINARY_ASSIGN_OPS(X)
   fci.params = op2;
   fci.param_count = op2 ? 1 : 0;
   if (FAILURE == zend_call_function(&fci, &fcc)) {
-    php_error(E_WARNING, "Failed calling %s::%s()", Z_OBJCE_P(op1)->name, Z_STRVAL(fci.function_name));
+    php_error(E_WARNING, "Failed calling %s::%s()", ZSTR_VAL(Z_OBJCE_P(op1)->name), Z_STRVAL(fci.function_name));
     ZVAL_NULL(fci.retval);
   }
 

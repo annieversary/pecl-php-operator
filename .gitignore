@@ -29,3 +29,7 @@
 /run-tests.php
 /*.lo
 /*.la
+
+/tests
+/tmp-php.ini
+/*.dep
