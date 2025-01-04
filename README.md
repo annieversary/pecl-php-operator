@@ -1,4 +1,4 @@
-# Operator overloading extension for PHP7
+# Operator overloading extension for PHP8.3
 
 ## Usage
 
@@ -51,7 +51,6 @@ The following overload methods are supported:
 | $o++  | `__post_inc()` |
 | --$o | `__pre_dec()` |
 | $o-- | `__post_dec()` |
-| $o = $arg | `__assign($arg)` |
 | $o += $arg | `__assign_add($arg)` |
 | $o -= $arg | `__assign_sub($arg)` |
 | $o *= $arg | `__assign_mul($arg)` |
